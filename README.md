@@ -19,23 +19,23 @@
 
 #### ° SG-LoadBalancer: Inbound Rules adicionar HTTP para origem "All", para permitir acesso à página web.
 
-![alt text](image-47.png)
+![alt text](./assets/image-47.png)
 
 #### ° SG-LaunchTemplate: Inbound Rules adicionar HTTP para origem do SG-LoadBalancer, MySQL para origem do SG-RDS e SSH para origem "All" para permitir conexão entre instâncias e banco de dados e para acessar a instância via chave SSH .ppk.
 
-![alt text](image-48.png)
+![alt text](./assets/image-48.png)
 
 #### ° SG-EFS: Inbound Rules adicionar NFS para origem do SG-LaunchTemplate para permitir conexão entre EFS e EC2.
 
-![alt text](image-49.png)
+![alt text](./assets/image-49.png)
 
 #### °SG-RDS: Inbound Rules adicionar MySQL para origem do SG-LaunchTemplate para permitir conexão entre o banco de dados e a instância.
 
-![alt text](image-50.png)
+![alt text](./assets/image-50.png)
 
 #### ° SG-ASG: Inbound Rules adicionar HTTP para SG-LoadBalancer e MySQL para SG-RDS para permitir conexão entre o ASG, banco de dados e http para o LB.
 
-![alt text](image-51.png)
+![alt text](./assets/image-51.png)
 
 #### ° Essas configurações permitirão a comunicação entre os serviços e evitam a exposição de recursos privados.
 
@@ -47,26 +47,26 @@
 
 #### ° Em conectividade essas são as configurações (Sem acesso público e selecionar a VPC do projeto, sem utilizar subnet pública no RDS):
 
-![alt text](image-52.png)
+![alt text](./assets/image-52.png)
 
 #### ° No final da página de configurações existe um detalhe importante. Na aba de configurações adicionais você deve inserir um nome incial para o DB, esse nome será colocado nas variáveis de ambiente do Userdata.
 
-![alt text](image-2.png)
+![alt text](./assets/image-2.png)
 
 #### ° DB criado e funcionando:
 
-![alt text](image-3.png)
+![alt text](./assets/image-3.png)
 
 ### Criação do EFS (Elastic File System)
 
 #### ° Pesquise por EFS, na aba de "File Systems" selecione "Create File System".
 #### ° Escolha um nome para esse EFS e selecione a mesma VPC utilizada no RDS e na EC2 e selecione o SG-EFS. Clique para criar e aguarde a criação do EFS.
 
-![alt text](image-6.png)
+![alt text](./assets/image-6.png)
 
-![alt text](image-7.png)
+![alt text](./assets/image-7.png)
 
-![alt text](image-8.png)
+![alt text](./assets/image-8.png)
 
 #### ° Comandos que podem ser utilizados no Userdata para montagem do EFS.
 
@@ -147,9 +147,9 @@ sudo docker-compose up -d
 
 #### ° Clique para criar uma Launch Template. Nas configurações faça como uma criação de instância normal, selecione a VPC usada no RDS e EFS, tipo t2.micro, AMI 2023 Linux, escolha o SG-LaunchTemplate, inclua a chave SSH ou crie uma e no final em "Detalhes avançados" coloque o Userdata criado anteriormente.
 
-![alt text](image-9.png)
+![alt text](./assets/image-9.png)
 
-![alt text](image-10.png)
+![alt text](./assets/image-10.png)
 
 
 ### Criação do Load Balancer
@@ -158,11 +158,11 @@ sudo docker-compose up -d
 
 #### ° Nas configurações escolha: internet-facing, a mesma VPC usada nos outros serviços, escolha as duas subnets públicas dessa VPC, o SG-LoadBalancer, em Listener e Instance protocol coloque o protocólo HTTP na porta 80, em Health Checks coloque o ping path = "/healthcheck.php" (arquivo criado no Userdata) e o protocólo em HTTP porta 80, em "Configurações avançadas de Health Check" mude os intervalos de verificação caso julgue necessário, por último clique para criar o Load Balancer.
 
-![alt text](image-12.png)
+![alt text](./assets/image-12.png)
 
-![alt text](image-13.png)
+![alt text](./assets/image-13.png)
 
-![alt text](image-19.png)
+![alt text](./assets/image-19.png)
 
 ### Criação do Auto Scaling Group
 
@@ -170,48 +170,48 @@ sudo docker-compose up -d
 
 #### ° Nas configurações: escolha um nome para o ASG, em Launch Template escolha a template criada anteriormente, escolha a mesma VPC, subnets e SG-ASG, associe o Auto Scaling Group com o Load Balancer criado no passo anterior, nas configurações de quantidade de instância e condições de scaling in e scaling out coloque para ter no mínimo 2 EC2, desejado 2 e máximo 3 instâncias. Por último revise as configurações e clique para criar o Auto Scaling Group.
 
-![alt text](image-14.png)
+![alt text](./assets/image-14.png)
 #### ° Escolha a Launch Template criada anteriormente.
 
-![alt text](image-20.png)
+![alt text](./assets/image-20.png)
 #### ° Escolha a VPC do projeto e as subnets públicas dessa VPC.
 
-![alt text](image-21.png)
+![alt text](./assets/image-21.png)
 #### ° Selecione a quantidade desejada de instâncias = 2, Min = 2 e Máx = 3. Esse máx será atingindo conforme as métricas e alarmes do Cloudwatch que serão criados no próximo passo. Por isso não precisa criar Scaling Policies agora.
 
 #### ° Escolha o Classic Load Balancer criado anteriormente.
-![alt text](image-15.png)
+![alt text](./assets/image-15.png)
 
 #### ° Se você for na aba de instâncias, as duas EC2 já vão estar criadas e você poderá acessá-las pelo navegador utilizando o DNS do Load Balancer (que foi associado ao Auto Scaling Group). Caso queira acessá-las, pode conectar-se via SSH utilizando o software PuTTy; quando já conectado, ao dar o comando "docker ps" você verificará que o container do Wordpress estará rodando normalmente.
 
-![alt text](image-22.png)
+![alt text](./assets/image-22.png)
 
 ### Criação de uma métrica de alarme no Cloudwatch
 
 #### ° No serviço de Cloudwatch clique em "Alarms" e selecione para criar um novo alarme.
 
-![alt text](image-23.png)
+![alt text](./assets/image-23.png)
 
 #### ° Selecione a métrica EC2 e "By Auto Scaling Group", marque a check box de CPUUtilization e faça as configurações:
 
 #### ° Aqui nessa configuração, será usada a média da utilização de CPU nos últimos 5 minutos, se caso o alarme perceber o comportamento de uso maior que 55%, a política do ASG usando esse alarme adicionará uma EC2. (O restante das configurações são default)
 
-![alt text](image-39.png)
+![alt text](./assets/image-39.png)
 
 #### ° Agora devemos criar outra para remover uma EC2 quando a utilização for inferior a 25%. (DETALHE QUE ELE REMOVERÁ APENAS SE TIVER 3 E O USO DIMINUIR, POIS A CAPACIDADE DESEJADA DO ASG É SEMPRE 2 EC2's).
 
-![alt text](image-40.png)
+![alt text](./assets/image-40.png)
 
 
 #### ° Depois de criar os alarmes, devemos ir para o Auto Scaling Group na aba de Automatic Scaling e criar duas políticas dinâmicas de escalonamento (uma para adicionar instâncias e outra para remover instâncias com base nos alarmes):
 
-![alt text](image-26.png)
+![alt text](./assets/image-26.png)
 
-![alt text](image-41.png)
+![alt text](./assets/image-41.png)
 
-![alt text](image-42.png)
+![alt text](./assets/image-42.png)
 
-![alt text](image-43.png)
+![alt text](./assets/image-43.png)
 
 #### ° Você pode criar primeiro as políticas dinâmicas e depois os alarmes (anexando eles às políticas) caso queira. Nessa ordem que eu fiz, você cria primeiro os alarmes e depois as políticas dinâmicas (associando as políticas aos alarmes já criados).
 
@@ -223,49 +223,49 @@ stress --cpu $(nproc --all)
 
 #### ° Depois de dar "stress" o alarme foi ativado e a terceira EC2 foi criada:
 
-![alt text](image-45.png)
+![alt text](./assets/image-45.png)
 
 #### ° Após finalizar o "stress" uma das 3 EC2 foi finalizada:
 
-![alt text](image-46.png)
+![alt text](./assets/image-46.png)
 
 ## - CONCLUSÃO
 
 ### TESTE DE TERMINAR UMA DAS DUAS INSTÂNCIAS E VERIFICAR O FUNCIONAMENTO DO WORDPRESS:
 
 #### ° Após terminar uma das EC2, o site continuou funcionando normalmente.
-![alt text](image-54.png)
+![alt text](./assets/image-54.png)
 
-![alt text](image-55.png)
+![alt text](./assets/image-55.png)
 
 #### ° Logo após alguns minutos uma nova instância foi criada para manter o mínimo de 2 estabelecido no Auto Scaling Group
 
-![alt text](image-56.png)
+![alt text](./assets/image-56.png)
 
 ### - Wordpress acessível pelo DNS do LoadBalancer
 
-![alt text](image-33.png)
+![alt text](./assets/image-33.png)
 
-![alt text](image-34.png)
+![alt text](./assets/image-34.png)
 
-![alt text](image-35.png)
+![alt text](./assets/image-35.png)
 
 #### ° Para acessar o banco de dados e verificar sua funcionalidade via SSH da EC2: 
 ```
 sudo docker run --rm -it mysql:8.0 mysql -h <ENDEREÇO_DO_RDS> -u <USUÁRIO> -p
 ```
 #### ° O usuário "testador" criado está presente no Banco de Dados:
-![alt text](image-36.png)
+![alt text](./assets/image-36.png)
 
 #### ° Testando o funcionamento do EFS:
 
 #### ° Montagem feita com sucesso e nesse diretório "upgrade" estarão as mídias que o usuário fez upload no Wordpress:
 
-![alt text](image-37.png)
+![alt text](./assets/image-37.png)
 
 #### ° Ao entrar conectar-se na EC2 e utilizar o comando "docker ps" é possível ver o contâiner do Wordpress rodando:
 
-![alt text](image-57.png)
+![alt text](./assets/image-57.png)
 
 #### ° Portanto, é possível verificar que a aplicação funcionou corretamente: gerando as EC2's pelo Auto Scaling Group (Launch Template com o Userdata contendo o docker-compose.yml e configurações que conectam a instância ao RDS e ao EFS); conectando esse ASG ao Load Balancer; acessando o Wordpress pelo DNS do Load Balancer; alarmando o uso de CPU das EC2's por meio do CloudWatch e escalonando a criação ou remoção de instâncias pelas métricas do ASG.
 
