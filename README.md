@@ -13,7 +13,7 @@
 
 ####  ° Criei uma VPC com 2 subnets públicas e 2 subnets privadas, para ter acesso a mais zonas de disponibilidade.
 
-![alt text](image-4.png)
+![alt text](./assets/image-4.png)
 
 ### Criação de um Security Group específico para cada serviço do projeto.
 
